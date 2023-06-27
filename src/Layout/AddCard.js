@@ -1,41 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useHistory, Link } from 'react-router-dom';
-import { readCard, updateCard } from '../utils/api';
+import { readDeck, createCard } from '../utils/api';
 
-function EditCard() {
-  const { deckId, cardId } = useParams();
+function AddCard() {
+  const { deckId } = useParams();
   const history = useHistory();
+  const [deck, setDeck] = useState(null);
   const [card, setCard] = useState({ front: '', back: '' });
 
   useEffect(() => {
-    const fetchCard = async () => {
+    const fetchDeck = async () => {
       try {
-        const fetchedCard = await readCard(cardId);
-        setCard(fetchedCard);
+        const fetchedDeck = await readDeck(deckId);
+        setDeck(fetchedDeck);
       } catch (error) {
         console.log(error);
       }
     };
 
-    fetchCard();
-  }, [cardId]);
+    fetchDeck();
+  }, [deckId]);
 
-  const handleCardUpdate = async (event) => {
-    event.preventDefault();
+  const handleSave = async () => {
     try {
-      await updateCard({ ...card, id: cardId });
-      history.push(`/decks/${deckId}`);
+      await createCard(deckId, card);
+      setCard({ front: '', back: '' });
     } catch (error) {
       console.log(error);
     }
   };
 
-  const handleInputChange = (event) => {
-    setCard((prevCard) => ({
-      ...prevCard,
-      [event.target.name]: event.target.value,
-    }));
+  const handleDone = () => {
+    history.push(`/decks/${deckId}`);
   };
+
+  if (!deck) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div>
@@ -47,15 +48,15 @@ function EditCard() {
             </Link>
           </li>
           <li className="breadcrumb-item">
-            <Link to={`/decks/${deckId}`}>Deck</Link>
+            <Link to={`/decks/${deckId}`}>{deck.name}</Link>
           </li>
           <li className="breadcrumb-item active" aria-current="page">
-            Edit Card
+            Add Card
           </li>
         </ol>
       </nav>
-      <h2>Edit Card</h2>
-      <form onSubmit={handleCardUpdate}>
+      <h2>{deck.name}: Add Card</h2>
+      <form>
         <div className="mb-3">
           <label htmlFor="front" className="form-label">
             Front
@@ -66,7 +67,7 @@ function EditCard() {
             name="front"
             rows="4"
             value={card.front}
-            onChange={handleInputChange}
+            onChange={(e) => setCard({ ...card, front: e.target.value })}
             required
           />
         </div>
@@ -80,14 +81,22 @@ function EditCard() {
             name="back"
             rows="4"
             value={card.back}
-            onChange={handleInputChange}
+            onChange={(e) => setCard({ ...card, back: e.target.value })}
             required
           />
         </div>
-        <Link to={`/decks/${deckId}`} className="btn btn-secondary mr-2">
-          Cancel
-        </Link>
-        <button type="submit" className="btn btn-primary">
+        <button
+          type="button"
+          className="btn btn-secondary mr-2"
+          onClick={handleDone}
+        >
+          Done
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={handleSave}
+        >
           Save
         </button>
       </form>
@@ -95,4 +104,4 @@ function EditCard() {
   );
 }
 
-export default EditCard;
+export default AddCard;

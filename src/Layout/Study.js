@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { readDeck } from '../utils/api';
 
 function Study() {
@@ -7,68 +7,64 @@ function Study() {
   const [deck, setDeck] = useState(null);
   const [cardIndex, setCardIndex] = useState(0);
   const [isFront, setIsFront] = useState(true);
-  const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
     const fetchDeck = async () => {
-      const response = await readDeck(deckId);
-      setDeck(response);
+      try {
+        const fetchedDeck = await readDeck(deckId);
+        setDeck(fetchedDeck);
+      } catch (error) {
+        console.log(error);
+      }
     };
 
     fetchDeck();
   }, [deckId]);
 
-  const handleFlip = () => {
-    setIsFlipped(!isFlipped);
+  const flipCard = () => {
+    setIsFront(!isFront);
   };
 
-  const handleNext = () => {
-    if (cardIndex < deck.cards.length - 1) {
-      setCardIndex(cardIndex + 1);
-      setIsFront(true);
-      setIsFlipped(false);
-    } else {
-      const confirmed = window.confirm('Restart the deck?');
-      if (confirmed) {
-        setCardIndex(0);
-        setIsFront(true);
-        setIsFlipped(false);
-      }
-    }
+  const nextCard = () => {
+    setCardIndex((prevIndex) => prevIndex + 1);
+    setIsFront(true);
   };
 
-  if (!deck) {
-    return <div>Loading...</div>;
+  if (!deck || deck.cards.length === 0) {
+    return (
+      <div>
+        <h4>Not enough cards</h4>
+      </div>
+    );
   }
 
-  const card = deck.cards[cardIndex];
+  if (cardIndex >= deck.cards.length) {
+    return (
+      <div>
+        <h4>End of deck</h4>
+      </div>
+    );
+  }
+
+  const currentCard = deck.cards[cardIndex];
 
   return (
     <div>
-      <h4>Study: {deck.name}</h4>
-      <div className="card">
-        <div className="card-body">
-          <h5 className="card-title">
-            Card {cardIndex + 1} of {deck.cards.length}
-          </h5>
-          <p className="card-text">{isFront ? card.front : card.back}</p>
-          <button className="btn btn-secondary mr-2" onClick={handleFlip}>
-            Flip
-          </button>
-          {isFlipped && (
-            <button className="btn btn-primary" onClick={handleNext}>
-              Next
-            </button>
-          )}
+      <h4>Studying: {deck.name}</h4>
+      <div>
+        <h5>
+          Card {cardIndex + 1} of {deck.cards.length}
+        </h5>
+        <div>
+          <div>
+            <p>{isFront ? currentCard.front : currentCard.back}</p>
+          </div>
         </div>
+        <button onClick={flipCard}>Flip</button>
+        {!isFront && (
+          <button onClick={nextCard}>Next</button>
+        )}
       </div>
-      {!isFlipped && (
-        <div className="mt-4">
-          <Link to={`/decks/${deckId}`} className="btn btn-secondary mr-2">
-            Back to Deck
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
