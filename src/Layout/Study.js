@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { readDeck } from '../utils/api';
+
 
 function Study() {
   const { deckId } = useParams();
@@ -26,14 +27,31 @@ function Study() {
   };
 
   const nextCard = () => {
-    setCardIndex((prevIndex) => prevIndex + 1);
+    setCardIndex((prevIndex) => {
+      if (prevIndex + 1 >= deck.cards.length) {
+        return 0; // Reset to the first card
+      } else {
+        return prevIndex + 1;
+      }
+    });
     setIsFront(true);
   };
 
-  if (!deck || deck.cards.length === 0) {
+  if (!deck) {
     return (
       <div>
-        <h4>Not enough cards</h4>
+        <h4>Loading...</h4>
+      </div>
+    );
+  }
+
+  if (deck.cards.length === 0) {
+    return (
+      <div>
+        <h4>Not enough cards. Please add cards to the deck.</h4>
+        <Link to={`/decks/${deckId}/cards/new`} className="btn btn-primary">
+          Add Card
+        </Link>
       </div>
     );
   }
@@ -61,9 +79,7 @@ function Study() {
           </div>
         </div>
         <button onClick={flipCard}>Flip</button>
-        {!isFront && (
-          <button onClick={nextCard}>Next</button>
-        )}
+        {!isFront && <button onClick={nextCard}>Next</button>}
       </div>
     </div>
   );

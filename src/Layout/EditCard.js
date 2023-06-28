@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useHistory, Link } from 'react-router-dom';
 import { readCard, updateCard } from '../utils/api';
+import CardForm from './CardForm';
 
 function EditCard() {
   const { deckId, cardId } = useParams();
@@ -20,21 +21,17 @@ function EditCard() {
     fetchCard();
   }, [cardId]);
 
-  const handleCardUpdate = async (event) => {
-    event.preventDefault();
+  const handleCardUpdate = async (updatedCard) => {
     try {
-      await updateCard({ ...card, id: cardId });
+      await updateCard({ ...updatedCard, id: cardId });
       history.push(`/decks/${deckId}`);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const handleInputChange = (event) => {
-    setCard((prevCard) => ({
-      ...prevCard,
-      [event.target.name]: event.target.value,
-    }));
+  const handleCancel = () => {
+    history.push(`/decks/${deckId}`);
   };
 
   return (
@@ -55,42 +52,7 @@ function EditCard() {
         </ol>
       </nav>
       <h2>Edit Card</h2>
-      <form onSubmit={handleCardUpdate}>
-        <div className="mb-3">
-          <label htmlFor="front" className="form-label">
-            Front
-          </label>
-          <textarea
-            className="form-control"
-            id="front"
-            name="front"
-            rows="4"
-            value={card.front}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label htmlFor="back" className="form-label">
-            Back
-          </label>
-          <textarea
-            className="form-control"
-            id="back"
-            name="back"
-            rows="4"
-            value={card.back}
-            onChange={handleInputChange}
-            required
-          />
-        </div>
-        <Link to={`/decks/${deckId}`} className="btn btn-secondary mr-2">
-          Cancel
-        </Link>
-        <button type="submit" className="btn btn-primary">
-          Save
-        </button>
-      </form>
+      <CardForm onSave={handleCardUpdate} onCancel={handleCancel} initialValues={card} />
     </div>
   );
 }
